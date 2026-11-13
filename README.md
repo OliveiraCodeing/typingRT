@@ -9,7 +9,7 @@ Native macOS-App zum Diktieren: rechte Option-Taste (`⌥`) gedrückt halten, sp
 
 ## Stand
 
-Entwicklungsstand 0.12.6. Alle zwölf geplanten Funktionsbereiche sind implementiert; 216 App-/Kerntests, 8 Worker-Tests und 35 Tests der Build-Werkzeuge bestehen (ein nativer Schlüsselbund-Test wird übersprungen).
+Entwicklungsstand 0.12.7. Alle zwölf geplanten Funktionsbereiche sind implementiert; 217 App-/Kerntests, 17 Worker-Tests (drei davon nur mit lokal installiertem Modell) und 35 Tests der Build-Werkzeuge bestehen (ein nativer Schlüsselbund-Test wird übersprungen).
 
 Am Gerät bestätigt: lokales Diktat im Standard-Modus, Einfügen ins Terminal, Diktieranzeige mit Pegel und Moduswahl.
 

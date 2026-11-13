@@ -8,8 +8,8 @@
     <key>CFBundleExecutable</key><string>typingRT</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleIconFile</key><string>AppIcon</string>
-    <key>CFBundleShortVersionString</key><string>0.12.6</string>
-    <key>CFBundleVersion</key><string>20</string>
+    <key>CFBundleShortVersionString</key><string>0.12.7</string>
+    <key>CFBundleVersion</key><string>21</string>
     <key>LSMinimumSystemVersion</key><string>15.0</string>
     <key>LSUIElement</key><true/>
     <key>NSHighResolutionCapable</key><true/>

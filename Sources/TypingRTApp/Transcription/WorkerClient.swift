@@ -10,7 +10,7 @@ enum WorkerClientError: LocalizedError {
         case .malformed: "Der Erkennungsdienst hat keine gültige Antwort geliefert."
         case .busy: "Der Erkennungsdienst verarbeitet bereits ein Diktat."
         case .remote: "Die lokale Erkennung ist fehlgeschlagen. Bitte Modellinstallation prüfen."
-        case .incompleteTranscription: "Die Erkennung hat ihr Textlimit erreicht. Es wird kein unvollständiger Text eingefügt. Bitte in kürzeren Abschnitten erneut diktieren."
+        case .incompleteTranscription: "Ein Teil der Aufnahme konnte nicht erkannt werden. Es wird kein unvollständiger Text eingefügt. Bitte in kürzeren Abschnitten erneut diktieren."
         }
     }
 }

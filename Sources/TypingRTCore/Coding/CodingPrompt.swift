@@ -42,10 +42,15 @@ public enum CodingPrompt {
         guard !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw CodingPromptError.emptyTranscript }
         guard input.utf8.count <= maximumTextBytes else { throw CodingPromptError.tooLarge }
         guard let model, model.id == modelID, let context = model.contextWindow,
-              let maximumOutput = model.maxOutputTokens,
-              context > 0, context <= 16_777_216, maximumOutput > 0, maximumOutput <= 1_000_000 else {
+              context > 0, context <= 16_777_216 else {
             throw CodingPromptError.limitsUnavailable
         }
+        // Requesty lists many models with a context window but no separate
+        // output limit (reported as 0). The context window then bounds the
+        // budget. Nothing is ever silently cut: a reply that does not end with
+        // finish_reason "stop" is rejected by the client.
+        let maximumOutput = model.maxOutputTokens ?? context
+        guard maximumOutput > 0 else { throw CodingPromptError.limitsUnavailable }
         let relevant = try boundedElements(transcript.relevantCanonicalSpellings)
         let protected = try protectedElements(in: input, dictionary: transcript.protectedCanonicalSpellings)
         let data = try JSONEncoder().encode(Envelope(transcript: input, relevantSpellings: relevant, protectedElements: protected))
@@ -54,7 +59,7 @@ public enum CodingPrompt {
 
         // App policy, NOT an exact provider tokenizer: one UTF-8 byte per input
         // token plus framing reserve; generous output allowance, never truncation.
-        // Unknown limits fail closed. Provider limits/finish_reason remain authoritative.
+        // An unknown context window fails closed. Provider limits/finish_reason remain authoritative.
         let outputBudget = max(512, input.utf8.count * 2 + 256)
         let inputBudget = system.utf8.count + data.count + 512
         guard outputBudget <= 32_768, outputBudget <= maximumOutput,

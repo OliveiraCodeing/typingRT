@@ -175,14 +175,14 @@ struct TranscriptionPipelineTests {
         await completed.wait()
         #expect(fatalFailures == 0)
         #expect(pipeline.result == nil)
-        #expect(completed.messages.first!?.contains("Textlimit") == true)
+        #expect(completed.messages.first!?.contains("unvollständiger Text") == true)
         #expect(!FileManager.default.fileExists(atPath: audio.url.path))
         let reply = WorkerReply(sessionID: session.id, text: nil, error: "untrusted remote message", loadSeconds: 0, inferenceSeconds: 0, errorCode: .incompleteTranscription)
         do {
             _ = try WorkerClient().decode(JSONEncoder().encode(reply), for: session.id)
             Issue.record("Incomplete result was accepted")
         } catch let error as WorkerClientError {
-            #expect(error.localizedDescription.contains("Textlimit"))
+            #expect(error.localizedDescription.contains("unvollständiger Text"))
             #expect(!error.localizedDescription.contains("untrusted"))
         }
         await pipeline.finishShutdown()

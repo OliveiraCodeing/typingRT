@@ -68,6 +68,20 @@ struct CodingPromptTests {
         #expect(Set(envelope.keys) == ["transcript", "relevantSpellings", "protectedElements"])
     }
 
+    @Test func missingOutputLimitFallsBackToTheContextWindow() throws {
+        let original = transcript("Bitte den Fehler beheben.")
+        // Shape reported by Requesty for many models: context known, output limit 0/absent.
+        let request = try CodingPrompt.prepare(transcript: original,
+                                               model: RequestyModel(id: model.id, contextWindow: 1_048_576))
+        #expect(request.maxOutputTokens >= 512 && request.maxOutputTokens <= 32_768)
+        #expect(throws: CodingPromptError.tooLarge) {
+            _ = try CodingPrompt.prepare(transcript: original, model: RequestyModel(id: model.id, contextWindow: 1000))
+        }
+        #expect(throws: CodingPromptError.limitsUnavailable) {
+            _ = try CodingPrompt.prepare(transcript: original, model: RequestyModel(id: model.id, maxOutputTokens: 4096))
+        }
+    }
+
     @Test func unknownMismatchAndInsufficientLimitsFailWithoutTruncation() throws {
         let original = transcript("Bitte den Fehler beheben.")
         for unknown in [nil, RequestyModel(id: model.id), RequestyModel(id: "other", contextWindow: 100_000, maxOutputTokens: 32_768),

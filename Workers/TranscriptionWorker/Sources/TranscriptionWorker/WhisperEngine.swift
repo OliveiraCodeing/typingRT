@@ -57,34 +57,68 @@ actor WhisperEngine {
             }
 
             let inferenceStart = ContinuousClock.now
-            let results = try await pipe.transcribe(
-                audioPath: request.audioPath,
-                audioInputOptions: AudioInputOptions(
-                    channelMode: .sumChannels(nil),
-                    audioLoadingMode: .incremental(chunkDurationSeconds: 120, maxBufferedChunks: 2)
-                ),
-                decodeOptions: DecodingOptions(
-                    verbose: false,
-                    task: .transcribe,
-                    language: nil,
-                    detectLanguage: true,
-                    skipSpecialTokens: true,
-                    wordTimestamps: false,
-                    promptTokens: promptTokens.isEmpty ? nil : promptTokens,
-                    concurrentWorkerCount: 1,
-                    chunkingStrategy: .vad
-                ),
-                callback: { _ in !Task.isCancelled }
-            )
+            // Load once, lift a quiet level, split at real pauses and decode
+            // chunk by chunk. WhisperKit's own whole-file path splits a quiet
+            // recording mid-word and silently returns an empty chunk.
+            var samples = try AudioProcessor.loadAudioAsFloatArray(
+                fromPath: request.audioPath, channelMode: .sumChannels(nil))
+            try Task.checkCancellation()
+            LevelNormalizer.normalize(&samples)
+            samples.append(contentsOf: repeatElement(0, count: LevelNormalizer.trailingSilence))
+            let window = pipe.featureExtractor.windowSamples ?? Constants.defaultWindowSamples
+            let chunks = try await VADAudioChunker().chunkAll(
+                audioArray: samples, maxChunkLength: window, decodeOptions: nil)
+            samples = []
+            func decode(_ audio: [Float], prompt: [Int]) async throws -> [TranscriptionResult] {
+                try await pipe.transcribe(
+                    audioArray: audio,
+                    decodeOptions: DecodingOptions(
+                        verbose: false,
+                        task: .transcribe,
+                        language: nil,
+                        detectLanguage: true,
+                        skipSpecialTokens: true,
+                        wordTimestamps: false,
+                        promptTokens: prompt.isEmpty ? nil : prompt,
+                        concurrentWorkerCount: 1,
+                        chunkingStrategy: ChunkingStrategy.none
+                    ),
+                    callback: { _ in !Task.isCancelled }
+                )
+            }
+            func isEmpty(_ part: [TranscriptionResult]) -> Bool {
+                part.allSatisfy { $0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            }
+            var results: [TranscriptionResult] = []
+            var promptCounts: [Int] = []
+            for chunk in chunks {
+                try Task.checkCancellation()
+                var part = try await decode(chunk.audioSamples, prompt: promptTokens)
+                var promptCount = promptTokens.count
+                try Task.checkCancellation()
+                if isEmpty(part), LevelNormalizer.containsSpeech(chunk.audioSamples) {
+                    if !promptTokens.isEmpty {
+                        // The dictionary context can make the decoder give up on
+                        // a difficult chunk. Its text matters more than spellings.
+                        part = try await decode(chunk.audioSamples, prompt: [])
+                        promptCount = 0
+                        try Task.checkCancellation()
+                    }
+                    // Never pass off a dictation with a missing stretch as complete.
+                    if isEmpty(part) { throw WorkerFailure.incompleteTranscription }
+                }
+                results.append(contentsOf: part)
+                promptCounts.append(contentsOf: repeatElement(promptCount, count: part.count))
+            }
             inferenceSeconds = Self.elapsed(since: inferenceStart)
             // A false progress callback can produce partial results rather than
             // throwing. Never return those as a completed cancelled dictation.
             try Task.checkCancellation()
-            for result in results {
+            for (result, promptCount) in zip(results, promptCounts) {
                 let windows = Dictionary(grouping: result.segments, by: \.seek)
                 let counts = windows.values.map { $0.reduce(0) { $0 + $1.tokens.count } }
                 guard !DictionaryPrompt.mayHaveTruncatedWindow(
-                    tokenCountsByWindow: counts, promptTokenCount: promptTokens.count
+                    tokenCountsByWindow: counts, promptTokenCount: promptCount
                 ) else { throw WorkerFailure.incompleteTranscription }
             }
             let text = results.map(\.text).map {
@@ -197,7 +231,7 @@ enum WorkerFailure: Error, Equatable {
         case .audioUnavailable:
             "Die temporäre Aufnahme ist nicht verfügbar."
         case .incompleteTranscription:
-            "Die Erkennung hat ihre Textgrenze erreicht. Es wurde kein möglicherweise unvollständiges Diktat eingefügt. Bitte in kürzeren Abschnitten erneut diktieren."
+            "Ein Teil der Aufnahme konnte nicht erkannt werden. Es wurde kein möglicherweise unvollständiges Diktat eingefügt. Bitte in kürzeren Abschnitten erneut diktieren."
         }
     }
 }
