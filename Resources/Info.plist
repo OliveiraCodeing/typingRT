@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key><string>typingRT</string>
+    <key>CFBundleDisplayName</key><string>typingRT</string>
+    <key>CFBundleIdentifier</key><string>dev.typingrt.mac</string>
+    <key>CFBundleExecutable</key><string>typingRT</string>
+    <key>CFBundlePackageType</key><string>APPL</string>
+    <key>CFBundleIconFile</key><string>AppIcon</string>
+    <key>CFBundleShortVersionString</key><string>0.12.5</string>
+    <key>CFBundleVersion</key><string>19</string>
+    <key>LSMinimumSystemVersion</key><string>15.0</string>
+    <key>LSUIElement</key><true/>
+    <key>NSHighResolutionCapable</key><true/>
+    <key>NSMicrophoneUsageDescription</key><string>typingRT benötigt Mikrofonzugriff, um deine Stimme während des Gedrückthaltens der rechten Option-Taste lokal zu transkribieren.</string>
+    <key>NSAccessibilityUsageDescription</key><string>typingRT benötigt Bedienungshilfen, um diktierte Texte am aktiven Textcursor einzufügen.</string>
+</dict>
+</plist>

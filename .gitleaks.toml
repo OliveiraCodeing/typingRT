@@ -1,0 +1,13 @@
+title = "typingRT secret scanning"
+
+[extend]
+useDefault = true
+
+# Öffentliche Hugging-Face-Revisionen (Git-Commit-IDs der Modell- und
+# Tokenizer-Repositories). Keine Zugangsdaten.
+[[allowlists]]
+description = "Gepinnte öffentliche Modellrevisionen"
+condition = "AND"
+paths = ['''Sources/TypingRTCore/Models/ModelDescriptor\.swift''']
+regexTarget = "line"
+regexes = ['''(?i)revision:\s*"[0-9a-f]{40}"''']
