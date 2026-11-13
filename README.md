@@ -11,7 +11,7 @@ Native macOS-App zum Diktieren: rechte Option-Taste (`⌥`) gedrückt halten, sp
 
 Entwicklungsstand 0.12.11. Alle zwölf geplanten Funktionsbereiche sind implementiert; 217 App-/Kerntests, 17 Worker-Tests (drei davon nur mit lokal installiertem Modell) und 35 Tests der Build-Werkzeuge bestehen (ein nativer Schlüsselbund-Test wird übersprungen).
 
-Am Gerät bestätigt: lokales Diktat im Standard-Modus (auch über eine Minute), Einfügen ins Terminal, Diktieranzeige mit Pegel und Moduswahl sowie der Coding-Modus mit einem Requesty-Modell.
+Am Gerät bestätigt: lokales Diktat im Standard-Modus (auch über eine Minute), Einfügen ins Terminal, Diktieranzeige mit Pegel und Moduswahl sowie der Coding-Modus mit zwei Requesty-Modellen (DeepSeek V4.1 Flash, Gemini 3.1 Flash Lite).
 
 Noch nicht am Gerät bestätigt bzw. offen:
 
@@ -50,6 +50,8 @@ open dist/typingRT-development.app
 2. **Bedienungshilfen** freigeben: Systemeinstellungen → Datenschutz & Sicherheit → Bedienungshilfen → `typingRT` hinzufügen. Die App braucht das, um die rechte Option-Taste global zu erkennen und Text einzufügen.
 3. **Modell installieren:** Im App-Fenster unter „Modelle & API“ das lokale Modell laden (Whisper Large v3 Turbo, rund 626 MB, von Hugging Face). Größe und Prüfsumme jeder Datei werden geprüft.
 4. Optional für **Coding:** Requesty-Schlüssel eintragen und ein Textmodell wählen. Der Schlüssel wird im macOS-Schlüsselbund gespeichert.
+
+> **Modellwahl für Coding:** Das Modell sollte schnell antworten. Die App schaltet das Nachdenken („Reasoning“) ab, soweit das Modell es zulässt, und wartet bis zu 90 Sekunden. Getestet mit `deepinfra/deepseek-v4.1-flash` und `google/gemini-3.1-flash-lite` (rund 10 Sekunden für ein längeres Diktat). Dasselbe Modell kann je nach Anbieter sehr unterschiedlich schnell sein: Über einen anderen Anbieter kam es zu Zeitüberschreitungen. Tarife mit `:flex` sind bewusst langsamer. Nach einer Zeitüberschreitung lässt sich die Formulierung über das Menüleistensymbol mit „Coding erneut versuchen“ wiederholen, ohne neu zu diktieren.
 
 > **Bekannte Grenze:** Der lokale Build ist ad hoc signiert. macOS bindet die Bedienungshilfen-Freigabe dann an den Codestand, sodass sie nach jedem neuen Build erneut erteilt werden muss (Eintrag entfernen und neu hinzufügen). Aus demselben Grund fragt macOS nach einem neuen Build einmal nach, ob die App den gespeicherten Requesty-Schlüssel aus dem Schlüsselbund lesen darf. Mit einer eigenen Code-Signing-Identität im Schlüsselbund lässt sich das vermeiden: `TYPINGRT_SIGNING_MODE=certificate bash scripts/enable-local-app.sh` (siehe `scripts/local-signing.py`; dieser Weg ist bisher nicht am Gerät bestätigt).
 

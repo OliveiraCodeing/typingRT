@@ -84,3 +84,9 @@ Tests/README.md
 scripts/README.md
 Resources/README.md
 Workers/TranscriptionWorker/README.md
+
+# Alle Dokumente unter docs/ bleiben privat, nur das Icon fürs README wird veröffentlicht.
+/docs/*
+!/docs/assets/
+/docs/assets/*
+!/docs/assets/icon.png
