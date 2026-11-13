@@ -16,8 +16,11 @@ public final class RequestyClient: RequestyServing, @unchecked Sendable {
         configuration.urlCache = nil
         configuration.urlCredentialStorage = nil
         configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
-        configuration.timeoutIntervalForRequest = 45
-        configuration.timeoutIntervalForResource = 120
+        // The reply is not streamed, so the first byte arrives only when the
+        // model has finished. Long dictations on slower providers need more
+        // than the former 45 s.
+        configuration.timeoutIntervalForRequest = 90
+        configuration.timeoutIntervalForResource = 150
         session = URLSession(configuration: configuration, delegate: redirects, delegateQueue: nil)
     }
 
@@ -160,7 +163,14 @@ private struct CompletionBody: Encodable {
     let messages: [Message]
     let maxTokens: Int
     let stream = false
-    enum CodingKeys: String, CodingKey { case model, messages, stream; case maxTokens = "max_tokens" }
+    // Rewording needs no deliberation. Reasoning models otherwise think first,
+    // which costs output budget and can outlast the timeout. Requesty documents
+    // "none" as accepted by all models (disables or minimises reasoning).
+    let reasoningEffort = "none"
+    enum CodingKeys: String, CodingKey {
+        case model, messages, stream
+        case maxTokens = "max_tokens", reasoningEffort = "reasoning_effort"
+    }
 }
 private struct CompletionEnvelope: Decodable {
     struct Choice: Decodable {
