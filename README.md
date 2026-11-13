@@ -11,11 +11,10 @@ Native macOS-App zum Diktieren: rechte Option-Taste (`⌥`) gedrückt halten, sp
 
 Entwicklungsstand 0.12.7. Alle zwölf geplanten Funktionsbereiche sind implementiert; 217 App-/Kerntests, 17 Worker-Tests (drei davon nur mit lokal installiertem Modell) und 35 Tests der Build-Werkzeuge bestehen (ein nativer Schlüsselbund-Test wird übersprungen).
 
-Am Gerät bestätigt: lokales Diktat im Standard-Modus, Einfügen ins Terminal, Diktieranzeige mit Pegel und Moduswahl.
+Am Gerät bestätigt: lokales Diktat im Standard-Modus (auch über eine Minute), Einfügen ins Terminal, Diktieranzeige mit Pegel und Moduswahl sowie der Coding-Modus mit einem Requesty-Modell.
 
 Noch nicht am Gerät bestätigt bzw. offen:
 
-- Coding-Modus mit echtem Requesty-Schlüssel und Modell
 - Messung von Latenz und Speicherbedarf, Login-Start, Bedienung mit VoiceOver
 - Getestet nur auf einem MacBook Air M4 (16 GB) mit macOS 27 und Swift 6.4; andere Systeme ungeprüft
 - Es gibt keine fertig signierte oder notarisierte Download-Version. Die App wird lokal aus dem Quellcode gebaut.
@@ -52,7 +51,7 @@ open dist/typingRT-development.app
 3. **Modell installieren:** Im App-Fenster unter „Modelle & API“ das lokale Modell laden (Whisper Large v3 Turbo, rund 626 MB, von Hugging Face). Größe und Prüfsumme jeder Datei werden geprüft.
 4. Optional für **Coding:** Requesty-Schlüssel eintragen und ein Textmodell wählen. Der Schlüssel wird im macOS-Schlüsselbund gespeichert.
 
-> **Bekannte Grenze:** Der lokale Build ist ad hoc signiert. macOS bindet die Bedienungshilfen-Freigabe dann an den Codestand, sodass sie nach jedem neuen Build erneut erteilt werden muss (Eintrag entfernen und neu hinzufügen). Mit einer eigenen Code-Signing-Identität im Schlüsselbund lässt sich das vermeiden: `TYPINGRT_SIGNING_MODE=certificate bash scripts/enable-local-app.sh` (siehe `scripts/local-signing.py`; dieser Weg ist bisher nicht am Gerät bestätigt).
+> **Bekannte Grenze:** Der lokale Build ist ad hoc signiert. macOS bindet die Bedienungshilfen-Freigabe dann an den Codestand, sodass sie nach jedem neuen Build erneut erteilt werden muss (Eintrag entfernen und neu hinzufügen). Aus demselben Grund fragt macOS nach einem neuen Build einmal nach, ob die App den gespeicherten Requesty-Schlüssel aus dem Schlüsselbund lesen darf. Mit einer eigenen Code-Signing-Identität im Schlüsselbund lässt sich das vermeiden: `TYPINGRT_SIGNING_MODE=certificate bash scripts/enable-local-app.sh` (siehe `scripts/local-signing.py`; dieser Weg ist bisher nicht am Gerät bestätigt).
 
 ## Bedienung
 
