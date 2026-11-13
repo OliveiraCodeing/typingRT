@@ -5,7 +5,7 @@ import TypingRTCore
 
 enum TextDeliveryOutcome: Equatable, Sendable {
     case confirmed
-    /// Pasted once into a target that cannot be read back (terminal).
+    /// Pasted once into a target that cannot be read back (terminal, browser web content).
     case handedOff
     case uncertain
     case unavailable(String)
@@ -85,7 +85,7 @@ final class TextDelivery {
                 self.finish(id: id, message: "Text eingefügt.")
             } else if outcome == .handedOff {
                 // Not verifiable, so it never counts as a confirmed time saving.
-                self.finish(id: id, message: "An das Terminal übergeben, ohne Enter. Der Text liegt auch in der Zwischenablage.")
+                self.finish(id: id, message: "Per Einfügen übergeben, ohne Enter. Der Text liegt auch in der Zwischenablage.")
             } else {
                 self.showPending(id: id)
             }

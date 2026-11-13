@@ -59,9 +59,14 @@ private actor NativeInsertionDriver {
         // Terminals expose no editable AX text. They receive one Paste of a
         // single-line text, which cannot submit the command line.
         if Self.isTerminal(app.bundleID) {
-            return await pasteIntoTerminal(text, app: app, cancellation: cancellation)
+            return await pasteHandoff(TerminalPaste.singleLine(text), app: app, cancellation: cancellation)
         }
+        // Browsers (notably Chrome) often build no AX tree for web content,
+        // so editors such as Google Docs expose no focused text element.
+        // Before any AX mutation, such targets get one Paste instead (E36).
+        let browser = Self.isBrowser(app.bundleID)
         guard let target = focusedTarget(pid: app.pid) else {
+            if browser, !focusIsSecureField() { return await pasteHandoff(text, app: app, cancellation: cancellation) }
             return .unavailable("Kein unterstütztes Textfeld fokussiert. Das Ergebnis bleibt zum Kopieren bereit.")
         }
 
@@ -88,6 +93,7 @@ private actor NativeInsertionDriver {
         guard isSettable(target.element, kAXValueAttribute),
               isSettable(target.element, kAXSelectedTextRangeAttribute),
               selectedRange(target.element) != nil else {
+            if browser { return await pasteHandoff(text, app: app, cancellation: cancellation) }
             return .unavailable("Dieses Textfeld unterstützt keine sichere automatische Übergabe. Bitte kopieren.")
         }
         guard let source = CGEventSource(stateID: .privateState),
@@ -136,12 +142,12 @@ private actor NativeInsertionDriver {
         return verified ? .confirmed : .uncertain
     }
 
-    /// A pasted newline can execute shell input even without a Return event,
-    /// so line breaks and tabs are removed first. The terminal offers no way
-    /// to verify the result; the outcome is a handoff, not a confirmation.
-    private func pasteIntoTerminal(_ text: String, app: ForegroundApplication,
-                                   cancellation: DeliveryCancellation) async -> TextDeliveryOutcome {
-        let line = TerminalPaste.singleLine(text)
+    /// One Paste into a target whose text cannot be read back (terminal or
+    /// web content without AX tree); the outcome is a handoff, not a
+    /// confirmation. Terminal callers pass single-line text, because a pasted
+    /// newline can execute shell input even without a Return event.
+    private func pasteHandoff(_ line: String, app: ForegroundApplication,
+                              cancellation: DeliveryCancellation) async -> TextDeliveryOutcome {
         guard !line.isEmpty else {
             return .unavailable("Der Text kann nicht automatisch übergeben werden. Bitte kopieren.")
         }
@@ -167,9 +173,9 @@ private actor NativeInsertionDriver {
         }
         down.postToPid(app.pid)
         up.postToPid(app.pid)
-        // Deliberately no restore after the Paste was sent: a terminal that
+        // Deliberately no restore after the Paste was sent: a target that
         // handles the key late would otherwise paste the previous, unfiltered
-        // clipboard (possibly several command lines). Keeping the dictated
+        // clipboard (in a terminal possibly several command lines). Keeping the dictated
         // line there also lets the user paste it manually if nothing arrived.
         guard !cancellation.isCancelled, !Task.isCancelled else { return .uncertain }
         return .handedOff
@@ -197,6 +203,18 @@ private actor NativeInsertionDriver {
         guard subroleError == .success || subroleError == .attributeUnsupported || subroleError == .noValue else { return nil }
         guard (subrole as? String) != kAXSecureTextFieldSubrole else { return nil }
         return Target(pid: pid, element: element)
+    }
+
+    /// Secure Input normally covers password fields; an AX-visible secure
+    /// subrole is an additional reason never to paste blindly.
+    private func focusIsSecureField() -> Bool {
+        let system = AXUIElementCreateSystemWide()
+        AXUIElementSetMessagingTimeout(system, 0.2)
+        guard let raw = attribute(system, kAXFocusedUIElementAttribute),
+              CFGetTypeID(raw) == AXUIElementGetTypeID() else { return false }
+        let element = unsafeBitCast(raw, to: AXUIElement.self)
+        AXUIElementSetMessagingTimeout(element, 0.2)
+        return (attribute(element, kAXSubroleAttribute) as? String) == kAXSecureTextFieldSubrole
     }
 
     private func stillFocused(_ target: Target) -> Bool {
@@ -260,6 +278,15 @@ private actor NativeInsertionDriver {
         return ["com.apple.terminal", "com.googlecode.iterm2", "net.kovidgoyal.kitty",
                 "org.alacritty", "org.wezfurlong.wezterm", "com.github.wez.wezterm", "com.mitchellh.ghostty"].contains(id)
             || id.hasPrefix("dev.warp.")
+    }
+
+    private static func isBrowser(_ bundleID: String?) -> Bool {
+        guard let id = bundleID?.lowercased() else { return false }
+        return ["com.google.chrome", "com.google.chrome.beta", "com.google.chrome.dev",
+                "com.google.chrome.canary", "org.chromium.chromium", "com.apple.safari",
+                "com.apple.safaritechnologypreview", "com.brave.browser", "com.microsoft.edgemac",
+                "company.thebrowser.browser", "company.thebrowser.dia", "com.vivaldi.vivaldi",
+                "com.operasoftware.opera", "org.mozilla.firefox", "app.zen-browser.zen"].contains(id)
     }
 }
 
