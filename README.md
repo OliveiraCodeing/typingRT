@@ -9,9 +9,9 @@ Native macOS-App zum Diktieren: rechte Option-Taste (`⌥`) gedrückt halten, sp
 
 ## Stand
 
-Entwicklungsstand 0.12.11. Alle zwölf geplanten Funktionsbereiche sind implementiert; 217 App-/Kerntests, 17 Worker-Tests (drei davon nur mit lokal installiertem Modell) und 35 Tests der Build-Werkzeuge bestehen (ein nativer Schlüsselbund-Test wird übersprungen).
+Entwicklungsstand 0.12.12. Alle zwölf geplanten Funktionsbereiche sind implementiert; 218 App-/Kerntests, 17 Worker-Tests (drei davon nur mit lokal installiertem Modell) und 35 Tests der Build-Werkzeuge bestehen (ein nativer Schlüsselbund-Test wird übersprungen).
 
-Am Gerät bestätigt: lokales Diktat im Standard-Modus (auch über eine Minute), Einfügen ins Terminal, Diktieranzeige mit Pegel und Moduswahl sowie der Coding-Modus mit zwei Requesty-Modellen (DeepSeek V4.1 Flash, Gemini 3.1 Flash Lite).
+Am Gerät bestätigt: lokales Diktat im Standard-Modus (auch über eine Minute), Einfügen ins Terminal und in Chrome (Google Docs, Google-Suche), Diktieranzeige mit Pegel und Moduswahl sowie der Coding-Modus mit zwei Requesty-Modellen (DeepSeek V4.1 Flash, Gemini 3.1 Flash Lite).
 
 Noch nicht am Gerät bestätigt bzw. offen:
 
@@ -63,6 +63,7 @@ open dist/typingRT-development.app
 - Am unteren Bildschirmrand sitzt ein kleiner Punkt. Mit dem Mauszeiger darüber lässt sich zwischen Standard und Coding wechseln; alternativ über das Menüleistensymbol.
 - Kann nicht sicher eingefügt werden (kein Textfeld, Passwortfeld), bleibt das Ergebnis zum Kopieren oder Verwerfen bereit.
 - In bekannten Terminal-Apps wird einzeilig eingefügt: Zeilenumbrüche und Tabs werden zu Leerzeichen, damit kein Befehl abgeschickt werden kann. Der Text bleibt dort zusätzlich in der Zwischenablage.
+- Browser wie Chrome geben Webseiten-Textfelder (etwa Google Docs) oft nicht an die Bedienungshilfen weiter. Bekannte Browser erhalten dann einmal Command-V mit dem vollständigen Text, ohne Enter; auch hier bleibt der Text in der Zwischenablage.
 
 ## Datenschutz
 
