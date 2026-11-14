@@ -9,7 +9,7 @@ Native macOS-App zum Diktieren: rechte Option-Taste (`⌥`) gedrückt halten, sp
 
 ## Stand
 
-Entwicklungsstand 0.12.12. Alle zwölf geplanten Funktionsbereiche sind implementiert; 218 App-/Kerntests, 17 Worker-Tests (drei davon nur mit lokal installiertem Modell) und 35 Tests der Build-Werkzeuge bestehen (ein nativer Schlüsselbund-Test wird übersprungen).
+Entwicklungsstand 0.12.13. Alle zwölf geplanten Funktionsbereiche sind implementiert; 221 App-/Kerntests, 17 Worker-Tests (drei davon nur mit lokal installiertem Modell) und 35 Tests der Build-Werkzeuge bestehen (ein nativer Schlüsselbund-Test wird übersprungen).
 
 Am Gerät bestätigt: lokales Diktat im Standard-Modus (auch über eine Minute), Einfügen ins Terminal und in Chrome (Google Docs, Google-Suche), Diktieranzeige mit Pegel und Moduswahl sowie der Coding-Modus mit zwei Requesty-Modellen (DeepSeek V4.1 Flash, Gemini 3.1 Flash Lite).
 
