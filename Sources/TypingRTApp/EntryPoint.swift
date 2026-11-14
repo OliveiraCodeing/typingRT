@@ -7,9 +7,14 @@ struct EntryPoint {
     @MainActor
     static func main() {
         if CommandLine.arguments.contains("--worker-check") {
-            guard WorkerClient.isBundled else {
+            switch WorkerClient.bundleState {
+            case .bundled: break
+            case .notBundled:
                 FileHandle.standardError.write(Data("Kein gebündelter WhisperKit-Worker vorhanden.\n".utf8))
                 Darwin.exit(3)
+            case .appMoved:
+                FileHandle.standardError.write(Data("App-Bundle wurde seit dem Start verschoben; bitte neu starten.\n".utf8))
+                Darwin.exit(5)
             }
             Task { @MainActor in
                 do {

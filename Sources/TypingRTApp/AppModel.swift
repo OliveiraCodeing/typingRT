@@ -119,7 +119,11 @@ final class AppModel {
             guard self.dictionary.isLoaded else { return "Wörterbuch bitte laden" }
             guard self.selectedMode == .coding || self.snippets.isLoaded else { return "Snippets bitte laden" }
             guard self.localModels.state == .installed else { return "Lokales Modell nicht bereit" }
-            return WorkerClient.isBundled ? "Erkennungsdienst bitte prüfen" : "Erkennungsdienst fehlt in dieser Vorschau"
+            switch WorkerClient.bundleState {
+            case .bundled: return "Erkennungsdienst bitte prüfen"
+            case .appMoved: return "App verschoben – bitte neu starten"
+            case .notBundled: return "Erkennungsdienst fehlt in dieser Vorschau"
+            }
         }
         dictation.captureHealthCheck = { [weak self] in self?.refreshPermissions() }
         dictation.onStateChanged = { [weak self] in self?.onChange?() }

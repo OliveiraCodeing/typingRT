@@ -2,10 +2,11 @@ import Foundation
 import TypingRTCore
 
 enum WorkerClientError: LocalizedError {
-    case unavailable, disconnected, malformed, busy, remote, incompleteTranscription
+    case unavailable, appMoved, disconnected, malformed, busy, remote, incompleteTranscription
     var errorDescription: String? {
         switch self {
         case .unavailable: "Der lokale Erkennungsdienst ist in diesem Build noch nicht enthalten."
+        case .appMoved: "typingRT wurde verschoben oder umbenannt. Bitte die App beenden und neu starten."
         case .disconnected: "Der Erkennungsdienst wurde unterbrochen. Bitte erneut diktieren."
         case .malformed: "Der Erkennungsdienst hat keine gültige Antwort geliefert."
         case .busy: "Der Erkennungsdienst verarbeitet bereits ein Diktat."
@@ -26,10 +27,11 @@ final class WorkerClient {
     private var pending: CheckedContinuation<Data, Error>?
     private var timeout: Task<Void, Never>?
 
-    static var isBundled: Bool {
-        let url = Bundle.main.bundleURL.appendingPathComponent("Contents/XPCServices/\(AppIdentity.current.workerServiceName).xpc/Contents/MacOS/TranscriptionWorker")
-        return FileManager.default.isExecutableFile(atPath: url.path)
+    static var bundleState: WorkerBundleState {
+        WorkerBundleState.evaluate(bundleURL: Bundle.main.bundleURL, serviceName: AppIdentity.current.workerServiceName)
     }
+
+    static var isBundled: Bool { bundleState == .bundled }
 
     func inspect() async throws -> WorkerCapabilities {
         let data = try await call(timeoutSeconds: 10) { proxy, reply in proxy.inspect(withReply: reply) }
@@ -89,7 +91,11 @@ final class WorkerClient {
 
     private func call(timeoutSeconds: Double, _ send: (TranscriptionWorkerProtocol, @escaping (Data) -> Void) -> Void) async throws -> Data {
         guard pending == nil else { throw WorkerClientError.busy }
-        guard Self.isBundled else { throw WorkerClientError.unavailable }
+        switch Self.bundleState {
+        case .bundled: break
+        case .appMoved: throw WorkerClientError.appMoved
+        case .notBundled: throw WorkerClientError.unavailable
+        }
         let token = generation
         let operation = UUID()
         if connection == nil {
